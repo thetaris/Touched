@@ -13,7 +13,7 @@ commands.viz = {
 		data : function(code, output, callback) {
 			var url = code.arg('src').text;
 			if(url) {
-				if(url.match(/[a-z]+:\/\//))
+				if(url.match(/^http:/))
 					url = "/redirect/" + encodeURI(url);
 				d3.text(url, function(data) {
 					if(!data)
@@ -24,6 +24,27 @@ commands.viz = {
 					}
 				});
 			}
+		},
+		Yahoodata : function(code, output, callback) {
+			$(document).ready(function() {
+				var src = code.arg('stock').text;
+				var numdays = code.arg('numdays').text;
+				if(src && numdays) {
+					var date = new Date();
+					var endd = date.getDate();
+					var endm = date.getMonth() + 1;
+					var endy = date.getFullYear();
+					date.setDate(date.getDate()-numdays);
+					var strd = date.getDate();
+					var strm = date.getMonth() + 1;
+					var stry = date.getFullYear();
+					var yurl = "/redirect/http://ichart.finance.yahoo.com/table.csv?s=" + src + "&d="+(endm-1)+"&e="+endd+"&f="+endy+"&g=d&a="+(strm-1)+"&b="+strd+"&c="+stry+"&ignore=.csv"
+					d3.text(yurl, function(data) {
+						data = VizData.text(data);
+						code.fold('filter', data, callback);
+					})
+				}
+			});
 		}
 	},
 	filter : {
@@ -62,7 +83,7 @@ commands.viz = {
 							});
 						}
 					});
-					data.text=lineArray.join('\n');
+					data.text = lineArray.join('\n');
 					callback(data);
 				}
 			}
@@ -243,12 +264,17 @@ var VizData = {
 		return {
 			matrix : matrix,
 			options : {
-				size : [300, 200],
+				size : [0, 0],
 				xaxis : undefined,
 				timexaxis : undefined,
 				circlesize : 3.5
 			},
 			toDOM : function(output) {
+				if(this.options.size[0] == 0 || this.options.size[1] == 0) {
+					var tmp = d3.select('#dataview')[0][0];
+					this.options.size[0] = tmp.offsetWidth;
+					this.options.size[1] = (tmp.offsetWidth * 2) / 3;
+				}
 				plot(output, getData(this.matrix, this.options.xaxis, this.options.timexaxis), this.options.size, this.options.timexaxis, this.options.circlesize);
 			}
 		}
