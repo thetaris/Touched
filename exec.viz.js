@@ -34,11 +34,11 @@ commands.viz = {
 					var endd = date.getDate();
 					var endm = date.getMonth() + 1;
 					var endy = date.getFullYear();
-					date.setDate(date.getDate()-numdays);
+					date.setDate(date.getDate() - numdays);
 					var strd = date.getDate();
 					var strm = date.getMonth() + 1;
 					var stry = date.getFullYear();
-					var yurl = "/redirect/http://ichart.finance.yahoo.com/table.csv?s=" + src + "&d="+(endm-1)+"&e="+endd+"&f="+endy+"&g=d&a="+(strm-1)+"&b="+strd+"&c="+stry+"&ignore=.csv"
+					var yurl = "/redirect/http://ichart.finance.yahoo.com/table.csv?s=" + src + "&d=" + (endm - 1) + "&e=" + endd + "&f=" + endy + "&g=d&a=" + (strm - 1) + "&b=" + strd + "&c=" + stry + "&ignore=.csv"
 					d3.text(yurl, function(data) {
 						data = VizData.text(data);
 						code.fold('filter', data, callback);
@@ -172,6 +172,21 @@ commands.viz = {
 			lineplot : function(code, data, callback) {
 				data = VizData.lineplot(data.matrix);
 				code.fold('option', data, callback);
+			},
+			insert : function(code, data, callback) {
+				var column = parseInt(code.arg('col').text);
+				code.arg('math').call(null, function(result) {
+					if(column && result) {
+						data.matrix = transpose(data.matrix);
+						var arr = new Array(data.matrix[0].length);
+						for(var i = 0; i < arr.length; i++) {
+							arr[i] = result;
+						}
+						data.matrix.splice(column - 1, 0, arr);
+						data.matrix = transpose(data.matrix);
+					};
+					callback(data);
+				})
 			}
 		},
 		json : {

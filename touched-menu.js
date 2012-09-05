@@ -34,8 +34,8 @@ function loadGrammarFile(url, callback) {
     grammarMenu={};
     initGrammar(url, function(menu) {
 	grammarMenu= menu;
-	updateMenu();
 	$('.arg[data-name=start]:first').attr('data-type',menu._root);
+	updateMenu();
 	callback && callback();
     })
 }
