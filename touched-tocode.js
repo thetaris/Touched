@@ -52,7 +52,9 @@ function toCode(node, commands) {
 	    type.split('.').forEach(function(sec) { 
 		f=f && f[sec];
 	    });
-	    if (f) {
+	    if (!this.isValid) {
+		callback && callback(data);
+	    } else if (f) {
 		var context= this;
 		var f2= function() { f(context, data, callback); };
 		if (commands._debug)
