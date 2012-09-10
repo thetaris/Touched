@@ -9,6 +9,17 @@ commands.viz = {
 			});
 		});
 	},
+	valueof : {
+		col : function(code, data, callback) {
+			var col = parseInt(code.arg("column").text);
+			if(col) {
+				if(!isNaN(data[col - 1]))
+					callback(parseFloat(data[col - 1]));
+				else
+					callback(data[col - 1]);
+			}
+		}
+	},
 	cmd : {
 		data : function(code, output, callback) {
 			var url = code.arg('src').text;
@@ -174,19 +185,22 @@ commands.viz = {
 				code.fold('option', data, callback);
 			},
 			insert : function(code, data, callback) {
-				var column = parseInt(code.arg('col').text);
-				code.arg('math').call(null, function(result) {
-					if(column && result) {
-						data.matrix = transpose(data.matrix);
-						var arr = new Array(data.matrix[0].length);
-						for(var i = 0; i < arr.length; i++) {
-							arr[i] = result;
-						}
-						data.matrix.splice(column - 1, 0, arr);
-						data.matrix = transpose(data.matrix);
-					};
+				if(code.arg('math').isValid) {
+					var column = parseInt(code.arg('col').text);
+					var count = data.matrix.length;
+					for(var i = 0; i < data.matrix.length; i++) {(function(row) {
+							getNum(code.arg('math'), data.matrix[row], function(result) {
+								console.log(result);
+								if(column && result) {
+									data.matrix[row].splice(column - 1, 0, result);
+								}
+								if(!--count)
+									callback(data);
+							});
+						})(i);
+					}
+				} else
 					callback(data);
-				})
 			}
 		},
 		json : {

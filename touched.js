@@ -34,6 +34,7 @@ function initTouched(canvasId, menuId, grammar, curDocument, editable) {
 		select(canvas.find('.arg'));
 	}
     }
+    canvas.find('.dragged').removeClass('dragged');
     updateAll(true);
 }
 
