@@ -51,8 +51,12 @@ commands.viz = {
 					var stry = date.getFullYear();
 					var yurl = "/redirect/http://ichart.finance.yahoo.com/table.csv?s=" + src + "&d=" + (endm - 1) + "&e=" + endd + "&f=" + endy + "&g=d&a=" + (strm - 1) + "&b=" + strd + "&c=" + stry + "&ignore=.csv"
 					d3.text(yurl, function(data) {
-						data = VizData.text(data);
-						code.fold('filter', data, callback);
+						if(data == null)
+							code.arg('stock').error("stock name is not correct");
+						else {
+							data = VizData.text(data);
+							code.fold('filter', data, callback);
+						}
 					})
 				}
 			});
@@ -140,7 +144,6 @@ commands.viz = {
 				var range = getRange(code.arg('rows'));
 				if(range) {
 					data.matrix = data.matrix.filter(function(ele, i) {
-						//console.log((i + 1) + ' -> ' + !range.contains(i + 1));
 						return !range.contains(i + 1);
 					});
 				}
@@ -150,7 +153,6 @@ commands.viz = {
 				var range = getRange(code.arg('rows'));
 				if(range) {
 					data.matrix = data.matrix.filter(function(ele, i) {
-						//console.log((i + 1) + ' -> ' + !range.contains(i + 1));
 						return range.contains(i + 1);
 					});
 				}
@@ -186,14 +188,12 @@ commands.viz = {
 			},
 			insert : function(code, data, callback) {
 				if(code.arg('math').isValid) {
-					var column = parseInt(code.arg('col').text);
+					var column = parseInt(code.arg('col').text) || 1;
 					var count = data.matrix.length;
 					for(var i = 0; i < data.matrix.length; i++) {(function(row) {
 							getNum(code.arg('math'), data.matrix[row], function(result) {
-								console.log(result);
-								if(column && result) {
-									data.matrix[row].splice(column - 1, 0, result);
-								}
+								//console.log(result);
+								data.matrix[row].splice(column - 1, 0, result);
 								if(!--count)
 									callback(data);
 							});
