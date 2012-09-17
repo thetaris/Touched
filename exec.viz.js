@@ -13,13 +13,24 @@ commands.viz = {
 		col : function(code, data, callback) {
 			var col = parseInt(code.arg("column").text);
 			if(col) {
-				if(!isNaN(data[col - 1]))
-					callback(parseFloat(data[col - 1]));
+				if(!isNaN(data.row[col - 1]))
+					callback(parseFloat(data.row[col - 1]));
 				else
-					callback(data[col - 1]);
-			}
+					callback(data.row[col - 1]);
+			} else
+				callback();
+		},
+		previeous : function(code, data, callback) {
+			var initval = parseInt(code.arg("value").text);
+			var value = data.oldvalue();
+			//console.log(value);
+			if(value)
+				callback(value);
+			else
+				callback(initval);
 		}
 	},
+
 	cmd : {
 		data : function(code, output, callback) {
 			var url = code.arg('src').text;
@@ -190,15 +201,46 @@ commands.viz = {
 				if(code.arg('math').isValid) {
 					var column = parseInt(code.arg('col').text) || 1;
 					var count = data.matrix.length;
-					for(var i = 0; i < data.matrix.length; i++) {(function(row) {
-							getNum(code.arg('math'), data.matrix[row], function(result) {
-								//console.log(result);
-								data.matrix[row].splice(column - 1, 0, result);
-								if(!--count)
-									callback(data);
-							});
-						})(i);
+					var i = 0;
+					/*
+					 for(var i = 0; i < data.matrix.length; i++) {(function(row) {
+					 getNum(code.arg('math'), data.matrix[row], function(result) {
+					 //console.log(result);
+					 data.matrix[row].splice(column - 1, 0, result);
+					 if(!--count)
+					 callback(data);
+					 });
+					 })(i);
+					 }*/
+					function seq() {
+						getNum(code.arg('math'), {
+							row : data.matrix[i],
+							oldvalue : function() {
+								if(i == 0)
+									return undefined;
+								else {
+									if(!isNaN(data.matrix[i-1][column - 1]))
+										return parseFloat(data.matrix[i-1][column - 1]);
+									else
+										return 0;
+								}
+							}
+						}, function(result) {
+							data.matrix[i].splice(column - 1, 0, result);
+							increaseTimeStep();
+						});
 					}
+
+					function increaseTimeStep() {
+						i++;
+						//console.log(i);
+						if(i < data.matrix.length)
+							seq();
+						else
+							callback(data);
+					}
+
+					seq();
 				} else
 					callback(data);
 			}
