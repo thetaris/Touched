@@ -129,7 +129,7 @@ function getyMin(data) {
 	});
 }
 
-function plot(root, data, size, timexaxis, circlesize) {
+function plot(root, data, size, timexaxis, circlesize, linewidth) {
 	var margin = {
 		top : 10,
 		right : 10,
@@ -165,8 +165,8 @@ function plot(root, data, size, timexaxis, circlesize) {
 	svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis);
 
 	svg.append("g").attr("class", "y axis").call(yAxis);
-
-	svg.selectAll(".line").data(data).enter().append("path").attr("class", "line").attr("d", line).style("stroke-width", 2).style("fill", 'none').style("stroke", function(d, i) {
+    
+	svg.selectAll(".line").data(data).enter().append("path").attr("class", "line").attr("d", line).style("stroke-width", linewidth).style("fill", 'none').style("stroke", function(d, i) {
 		return color(i);
 	});
 	var svg2 = svg.selectAll(".dot");

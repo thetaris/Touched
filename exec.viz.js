@@ -20,14 +20,25 @@ commands.viz = {
 			} else
 				callback();
 		},
-		previeous : function(code, data, callback) {
-			var initval = parseInt(code.arg("value").text);
+		previous : function(code, data, callback) {
+			var initval = parseInt(code.arg("start").text);
 			var value = data.oldvalue();
-			//console.log(value);
 			if(value)
 				callback(value);
 			else
 				callback(initval);
+		},
+		index : function(code, data, callback) {
+			//console.log(data.index);
+			callback(data.index);
+		},
+		element : function(code, data, callback) {
+			getNum(code.arg('row'), data, function(result) {
+				var col = parseInt(code.arg('col').text);
+				if(data.all[result-1])
+					callback(data.all[result-1][col - 1]);
+				else callback();
+			});
 		}
 	},
 
@@ -224,8 +235,11 @@ commands.viz = {
 									else
 										return 0;
 								}
-							}
+							},
+							index : i + 1,
+							all : data.matrix,
 						}, function(result) {
+							//console.log(result);
 							data.matrix[i].splice(column - 1, 0, result);
 							increaseTimeStep();
 						});
@@ -298,6 +312,12 @@ commands.viz = {
 			if(circlesize)
 				data.options.circlesize = circlesize;
 			callback(data);
+		},
+		linewidth : function(code, data, callback){
+			var linewidth = code.arg('linewidth').text;
+			if(linewidth)
+			    data.options.linewidth = linewidth;
+			callback(data);
 		}
 	}
 };
@@ -338,7 +358,8 @@ var VizData = {
 				size : [0, 0],
 				xaxis : undefined,
 				timexaxis : undefined,
-				circlesize : 3.5
+				circlesize : 3.5,
+				linewidth : 2
 			},
 			toDOM : function(output) {
 				if(this.options.size[0] == 0 || this.options.size[1] == 0) {
@@ -346,7 +367,7 @@ var VizData = {
 					this.options.size[0] = tmp.offsetWidth;
 					this.options.size[1] = (tmp.offsetWidth * 2) / 3;
 				}
-				plot(output, getData(this.matrix, this.options.xaxis, this.options.timexaxis), this.options.size, this.options.timexaxis, this.options.circlesize);
+				plot(output, getData(this.matrix, this.options.xaxis, this.options.timexaxis), this.options.size, this.options.timexaxis, this.options.circlesize, this.options.linewidth);
 			}
 		}
 	}

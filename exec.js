@@ -53,10 +53,13 @@ commands.xml = {
 }
 
 function getNum(code, output, callback) {
-	if(code.type == 'number')
-		callback(parseFloat(code.text));
-	else
-		code.call(output, callback);
+	if(code.isValid) {
+		if(code.type == 'number') {
+			callback(parseFloat(code.text));
+		} else
+			code.call(output, callback);
+	} else
+		callback();
 }
 
 function foldLR(code, output, callback) {
@@ -146,6 +149,22 @@ commands.math = {
 			getNum(code.arg('argument'), output, function(result) {
 				callback(Math.cos(result));
 			});
+		},
+		If : function(code, output, callback) {
+			getNum(code.arg('Logicaltest'), output, function(result) {
+				//console.log(result);
+				if(result === undefined) {
+					callback();
+				} else if(result) {
+					getNum(code.arg('valueiftrue'), output, function(result) {
+						callback(result);
+					});
+				} else {
+					getNum(code.arg('valueiffalse'), output, function(result) {
+						callback(result);
+					});
+				}
+			});
 		}
 	},
 	bool : {
@@ -169,5 +188,15 @@ commands.math = {
 				callback(a != b);
 			});
 		},
+		and : function(code, output, callback){
+			foldLR(code, output, function(a, b) {
+				callback(a && b);
+			});			
+		},
+		or : function(code, output, callback){
+			foldLR(code, output, function(a, b) {
+				callback(a || b);
+			});					
+		}
 	}
 }

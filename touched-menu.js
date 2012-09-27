@@ -307,6 +307,9 @@ function menu_comment() {
 	    var quickopen=$('<div class="comment openaction">&#x2295;</div>');
 	    selection.prepend(quickopen);
 	}
+	else{
+		selection.removeClass('collapsed');
+	}
 	select(selection);
 	updateMenu();
     });
