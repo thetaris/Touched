@@ -129,6 +129,62 @@ function getyMin(data) {
 	});
 }
 
+function getHistogramData(value) {
+	return d3.range(value.length).map(function(i) {
+		if(value[i] instanceof Array)
+			return getHistogramData(value[i]);
+		else
+			return parseFloat(value[i]);
+	})
+}
+
+function draw_histogram(root, data, size, bins, bandwidth) {
+	var margin = {
+		top : 10,
+		right : 10,
+		bottom : 20,
+		left : 40
+	}
+	var width = size[0] - margin.left - margin.right;
+	var height = size[1] - margin.top - margin.bottom;
+	var histogram = d3.layout.histogram().bins(bins)(data[0]);
+
+	var xmin = d3.min(histogram.map(function(d) {
+		return d.x;
+	}));
+	var xmax = d3.max(histogram.map(function(d) {
+		return d.x;
+	}));
+	var x = d3.scale.linear().domain([xmin, xmax]).range([0, width]);
+
+	var ymax = d3.max(histogram.map(function(d) {
+		return d.y;
+	}));
+	var ymin = d3.min(histogram.map(function(d) {
+		return d.y;
+	}));
+	var y = d3.scale.linear().domain([ymin, ymax]).range([height, 0]);
+
+	var xAxis = d3.svg.axis().scale(x).orient("bottom");
+
+	var yAxis = d3.svg.axis().scale(y).orient("left");
+
+	var svg = root.append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	var bar = svg.selectAll(".bar").data(histogram).enter().append("g").attr("class", "bar").attr("transform", function(d) {
+		return "translate(" + x(d.x) + "," + y(d.y) + ")";
+	});
+
+	bar.append("rect").attr("x", 1).attr("width", bandwidth).attr("height", function(d) {
+		//console.log(x(histogram[0].dx));
+		return height - y(d.y);
+	});
+
+	svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis);
+
+	svg.append("g").attr("class", "y axis").call(yAxis);
+}
+
 function plot(root, data, size, timexaxis, circlesize, linewidth) {
 	var margin = {
 		top : 10,
@@ -165,7 +221,7 @@ function plot(root, data, size, timexaxis, circlesize, linewidth) {
 	svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis);
 
 	svg.append("g").attr("class", "y axis").call(yAxis);
-    
+
 	svg.selectAll(".line").data(data).enter().append("path").attr("class", "line").attr("d", line).style("stroke-width", linewidth).style("fill", 'none').style("stroke", function(d, i) {
 		return color(i);
 	});

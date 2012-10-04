@@ -35,9 +35,10 @@ commands.viz = {
 		element : function(code, data, callback) {
 			getNum(code.arg('row'), data, function(result) {
 				var col = parseInt(code.arg('col').text);
-				if(data.all[result-1])
+				if(data.all[result - 1])
 					callback(data.all[result-1][col - 1]);
-				else callback();
+				else
+					callback();
 			});
 		}
 	},
@@ -208,6 +209,10 @@ commands.viz = {
 				data = VizData.lineplot(data.matrix);
 				code.fold('option', data, callback);
 			},
+			histogram : function(code, data, callback) {
+				data = VizData.histogram(data.matrix);
+				code.fold('option', data, callback);
+			},
 			insert : function(code, data, callback) {
 				if(code.arg('math').isValid) {
 					var column = parseInt(code.arg('col').text) || 1;
@@ -279,45 +284,63 @@ commands.viz = {
 		}
 	},
 	plotoption : {
-		size : function(code, data, callback) {
-			var width = parseFloat(code.arg('width').text);
-			if(width)
-				data.options.size[0] = width;
-			var height = parseFloat(code.arg('height').text);
-			if(height)
-				data.options.size[1] = height;
-			callback(data);
-		},
-		xaxis : function(code, data, callback) {
-			var colnum = code.arg('column').text;
-			if(colnum) {
-				data.options.xaxis = data.matrix[colnum - 1];
-				data.matrix.splice(colnum - 1, 1);
+		general : {
+			size : function(code, data, callback) {
+				var width = parseFloat(code.arg('width').text);
+				if(width)
+					data.options.size[0] = width;
+				var height = parseFloat(code.arg('height').text);
+				if(height)
+					data.options.size[1] = height;
+				callback(data);
 			}
-			callback(data);
 		},
-		timexaxis : function(code, data, callback) {
-			if(!data.options.xaxis) {
-				code.error('no xaxis defined')
-			} else {
-				var format = code.arg('format').text;
-				if(format) {
-					data.options.timexaxis = format;
+		lineplot : {
+			xaxis : function(code, data, callback) {
+				var colnum = code.arg('column').text;
+				if(colnum) {
+					data.options.xaxis = data.matrix[colnum - 1];
+					data.matrix.splice(colnum - 1, 1);
 				}
+				callback(data);
+			},
+			timexaxis : function(code, data, callback) {
+				if(!data.options.xaxis) {
+					code.error('no xaxis defined')
+				} else {
+					var format = code.arg('format').text;
+					if(format) {
+						data.options.timexaxis = format;
+					}
+				}
+				callback(data);
+			},
+			circle : function(code, data, callback) {
+				var circlesize = code.arg('circlesize').text;
+				if(circlesize)
+					data.options.circlesize = circlesize;
+				callback(data);
+			},
+			linewidth : function(code, data, callback) {
+				var linewidth = code.arg('linewidth').text;
+				if(linewidth)
+					data.options.linewidth = linewidth;
+				callback(data);
 			}
-			callback(data);
 		},
-		circle : function(code, data, callback) {
-			var circlesize = code.arg('circlesize').text;
-			if(circlesize)
-				data.options.circlesize = circlesize;
-			callback(data);
-		},
-		linewidth : function(code, data, callback){
-			var linewidth = code.arg('linewidth').text;
-			if(linewidth)
-			    data.options.linewidth = linewidth;
-			callback(data);
+		histogram : {
+			bandwidth : function(code, data, callback) {
+				var bandwidth = code.arg('bandwidth').text;
+				if(bandwidth)
+					data.options.bandwidth = bandwidth;
+				callback(data);
+			},
+			bins : function(code, data, callback) {
+				var bins = code.arg('bins').text;
+				if(bins)
+					data.options.bins = parseFloat(bins);
+				callback(data);
+			}
 		}
 	}
 };
@@ -370,6 +393,25 @@ var VizData = {
 				plot(output, getData(this.matrix, this.options.xaxis, this.options.timexaxis), this.options.size, this.options.timexaxis, this.options.circlesize, this.options.linewidth);
 			}
 		}
+	},
+	histogram : function(matrix) {
+		return {
+			matrix : matrix,
+			options : {
+				size : [0, 0],
+				bins : 100,
+				bandwidth : 5
+			},
+			toDOM : function(output) {
+				if(this.options.size[0] == 0 || this.options.size[1] == 0) {
+					var tmp = d3.select('#dataview')[0][0];
+					this.options.size[0] = tmp.offsetWidth;
+					this.options.size[1] = (tmp.offsetWidth * 2) / 3;
+				}
+				draw_histogram(output, getHistogramData(this.matrix), this.options.size, this.options.bins, this.options.bandwidth);
+			}
+		}
+
 	}
 }
 
