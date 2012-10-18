@@ -176,7 +176,6 @@ function draw_histogram(root, data, size, bins, bandwidth) {
 	});
 
 	bar.append("rect").attr("x", 1).attr("width", bandwidth).attr("height", function(d) {
-		//console.log(x(histogram[0].dx));
 		return height - y(d.y);
 	});
 

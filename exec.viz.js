@@ -254,6 +254,9 @@ commands.viz = {
 						i++;
 						//console.log(i);
 						if(i < data.matrix.length)
+							if ((i % 100) == 0)
+							setTimeout(seq, 0);
+							else
 							seq();
 						else
 							callback(data);
