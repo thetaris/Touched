@@ -1,3 +1,89 @@
+commands.puzzle = {
+	game : function(code, output) {
+		output.selectAll('*').remove();
+		var goal = code.arg('goal').text;
+		output.append('div').text("<touchop>");
+		if(goal) {		
+			output.append('div').text("<test domain=" + "\"" + "algebra" + "\"" + " win=" + "\"" + goal + "\"" + "/>");
+		}
+		code.args('command').forEach(function(cmd) {
+			var root = output.append('div');
+			cmd.call(root, function(data) {
+				data.toDOM(root);
+			});
+		});
+		output.append('div').text("</touchop>");
+		output.append('script').attr('src','../puzzle/touchop.js').attr('type', 'text/javascript');
+		output.append('script').attr('src','../puzzle/def.js').attr('type', 'text/javascript');
+		output.append('script').attr('src','../puzzle/algebra.js').attr('type', 'text/javascript');
+		var xmltext = output[0][0].innerText;
+		var parser = new DOMParser();
+		var xml = parser.parseFromString(xmltext, 'text/xml');
+		xsltProcessor = new XSLTProcessor();
+		var xsltext = loadXMLDoc("../puzzle/touchop.xsl");
+		var xsl = parser.parseFromString(xsltext, 'text/xml');
+		xsltProcessor.importStylesheet(xsl);		
+		var resultDocument = xsltProcessor.transformToFragment(xml, document);
+        output[0][0].innerText="";
+        output.node().appendChild(resultDocument);
+		//document.getElementById("dataview").appendChild(resultDocument);		
+		setTimeout(function(){initialization()},300);		
+	},
+	puzzlecmd : {
+		op : {
+			plus : function(code, output, callback) {
+				var x = code.arg('x position').text;
+				var y = code.arg('y position').text;
+				if(x && y) {
+					data = VizData.text("<op name=" + "\"" + "plus" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+					callback(data);
+				}
+			},
+			minus : function(code, output, callback) {
+				var x = code.arg('x position').text;
+				var y = code.arg('y position').text;
+				if(x && y) {
+					data = VizData.text("<op name=" + "\"" + "minus" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+					callback(data);
+				}
+			},
+			multiply : function(code, output, callback) {
+				var x = code.arg('x position').text;
+				var y = code.arg('y position').text;
+				if(x && y) {
+					data = VizData.text("<op name=" + "\"" + "multiply" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+					callback(data);
+				}
+			},
+			divide : function(code, output, callback) {
+				var x = code.arg('x position').text;
+				var y = code.arg('y position').text;
+				if(x && y) {
+					data = VizData.text("<op name=" + "\"" + "divide" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+					callback(data);
+				}
+			},
+			power : function(code, output, callback) {
+				var x = code.arg('x position').text;
+				var y = code.arg('y position').text;
+				if(x && y) {
+					data = VizData.text("<op name=" + "\"" + "power" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+					callback(data);
+				}
+			},
+		},
+		value : function(code, output, callback) {
+			var value = code.arg('value').text;
+			var x = code.arg('x position').text;
+			var y = code.arg('y position').text;
+			if(x && y) {
+				data = VizData.text("<atom value=" + "\"" + value + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+				callback(data);
+			}
+		}
+	},
+}
+
 // implement the viz grammar
 commands.viz = {
 	script : function(code, output) {
@@ -254,10 +340,10 @@ commands.viz = {
 						i++;
 						//console.log(i);
 						if(i < data.matrix.length)
-							if ((i % 100) == 0)
-							setTimeout(seq, 0);
+							if((i % 100) == 0)
+								setTimeout(seq, 0);
 							else
-							seq();
+								seq();
 						else
 							callback(data);
 					}
@@ -441,3 +527,18 @@ function getKeys(obj) {
 		}
 	return keys;
 };
+
+function loadXMLDoc(dname) {
+	var xmlhttp;
+	if(window.XMLHttpRequest) {
+		xmlhttp = new XMLHttpRequest();
+	} else if(window.ActiveXObject) {
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+
+	xmlhttp.open("GET", dname, false);
+	//xmlhttp.setRequestHeader('Content-Type', 'text/xml');
+	xmlhttp.send();
+	//console.log(xmlhttp.responseText);
+	return xmlhttp.responseText;
+}
