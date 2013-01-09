@@ -49,23 +49,25 @@ http.createServer(function(req, res) {
 		reqCode = (req.url.match('[?&]code=([^&]*)') || [])[1];
 	if(isMongoDB(filename)) {
 		// check code from MongoDB (is true if docuemnt does not exist)
-        /*
-		getCollection(function(collection) {
-			touchedDB.checkCode(collection, filename, reqCode, function(valid) {
-				console.log(valid);
-				handleRequest(req, res, valid, filename, reqCode);
+		//first to get the content needs to be stored
+		getPostContent(req, function(data) {
+			touchedDB.getCollection(function(collection) {
+				touchedDB.checkCode(collection, filename, reqCode, function(valid) {
+					validCode = valid;
+					console.log(validCode);
+					handleRequest(data, req, res, validCode, filename, reqCode);
+				});
 			});
-		});*/
-		validCode = true;
-		handleRequest(req, res, validCode, filename, reqCode);
+		});
 	} else {
 		validCode = (reqCode == adminCode) && files[filename];
-		handleRequest(req, res, validCode, filename, reqCode);
+		getPostContent(req, function(content) {
+			handleRequest(content, req, res, validCode, filename, reqCode);
+		});
 	}
-
 }).listen(port);
 
-function handleRequest(req, res, validCode, filename, reqCode) {
+function handleRequest(content, req, res, validCode, filename, reqCode) {
 	// serve appropriate file
 	if(req.url.match('^/(index.html)?$')) {
 		res.writeHead(303, {
@@ -82,7 +84,7 @@ function handleRequest(req, res, validCode, filename, reqCode) {
 		var mode = req.url.match(/[?&]([^&]*)(&|$)/)[1];
 		if(mode == 'save') {
 			if(validCode)
-				saveFile(req, res, filename, reqCode);
+				saveFile(content, res, filename, reqCode);
 			else
 				denyAccess(res, 'Invalid security code');
 		} else if(mode == 'play') {
@@ -146,17 +148,18 @@ function showTouched(res, filename, template, code) {
 		} else {
 			show(res, filename, template, code, g);
 		}
-
 	});
 }
 
 function show(res, filename, template, code, g) {
 	//console.log("get here");
 	readTouchedContent(filename, function(err, content) {
+		//if err, it means there is no such a file stored on Mongolab, needs to be created
 		if(err) {
+			//if there is a code, insert this file in the Mongolab, if not, read the create.html and ask the user to create 
 			if(code) {
 				// create file or insert with code
-				getCollection(function(collection) {
+				touchedDB.getCollection(function(collection) {
 					touchedDB.insert(collection, "", filename, code);
 				});
 			} else {
@@ -193,7 +196,7 @@ function isMongoDB(name) {
 function readTouchedContent(name, callback) {
 	if(isMongoDB(name)) {
 		// all mongo dependencies are here, nowhere else
-		getCollection(function(collection) {
+		touchedDB.getCollection(function(collection) {
 			collection.find({
 				name : name
 			}, function(err, cursor) {
@@ -245,49 +248,34 @@ function denyAccess(res, message) {
 	res.end(message);
 }
 
-function saveFile(req, res, filename, reqcode) {
-	console.log('saving: ' + filename);
-	//console.log(res);
-	console.log(req.url);
+function getPostContent(req, callback) {
+	console.log(req.method);
 	var body = '<touched>';
 	if(req.method == 'POST') {
-		console.log("get here");
-
 		req.on('data', function(data) {
 			body += data;
-			console.log("Partial body: " + body);
 		});
 		req.on('end', function() {
 			body += '</touched>';
-			console.log('BODY :' + body);
-
-			if(!isMongoDB(filename)) {
-				fs.writeFile(filename, body, function(err) {
-					res.writeHead( err ? 406 : 200);
-					res.end();
-				});
-			} else {
-				getCollection(function(collection) {
-					touchedDB.update(collection, body, filename, reqcode);
-					res.end();
-				});
-			}
+			callback(body);
 		});
+	} else if(req.method == 'GET') {
+		callback(null);
 	}
 }
 
-function getCollection(callback) {
-	var mongodb = require('mongodb');
-	var server = new mongodb.Server("dbh46.mongolab.com", 27467, {});
-	var db = new mongodb.Db('thetaeditor', server, {});
-	var colle;
-	db.open(function(error, client) {
-		client.authenticate('chao', 'thetaris88', function(err, val) {
-			if(error) {
-				console.log(error);
-			}
-			colle = new mongodb.Collection(client, 'puzzle_collection');
-			callback(colle);
+//save the file either to the local file or to the Mongolab
+function saveFile(content, res, filename, reqcode) {
+	console.log('saving: ' + filename);
+	if(!isMongoDB(filename)) {
+		fs.writeFile(filename, content, function(err) {
+			res.writeHead( err ? 406 : 200);
+			res.end();
 		});
-	});
+	} else {
+		touchedDB.getCollection(function(collection) {
+			touchedDB.update(collection, content, filename, reqcode);
+			res.end();
+		});
+	}
 }

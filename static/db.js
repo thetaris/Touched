@@ -1,7 +1,7 @@
 // handle file and db access
 // NOT: checking security code
 // NOT: sending responses to web client (browser)
-
+var colle;
 function insert(collection, content, filename, securitycode) {
 	//console.log("insert");
 	collection.insert({
@@ -54,6 +54,28 @@ function checkCode(collection, filename, code, callback) {
 	});
 }
 
+function getCollection(callback) {
+	if(!colle) {
+		console.log("create collection");
+		var mongodb = require('mongodb');
+		var server = new mongodb.Server("dbh46.mongolab.com", 27467, {});
+		var db = new mongodb.Db('thetaeditor', server, {});
+		//var colle;
+		db.open(function(error, client) {
+			client.authenticate('chao', 'thetaris88', function(err, val) {
+				if(error) {
+					console.log(error);
+				}
+				colle = new mongodb.Collection(client, 'puzzle_collection');
+				callback(colle);
+			});
+		});
+	}
+	else 
+	    callback(colle);
+}
+
+exports.getCollection = getCollection;
 exports.checkCode = checkCode;
 exports.insert = insert;
 exports.update = update;
