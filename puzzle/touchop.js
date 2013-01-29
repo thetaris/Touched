@@ -39,12 +39,9 @@ function deepLayout(obj, doFloat) {
 		// call layout function if available
 		//var command= obj.getAttributeNS(topns,"layout");
 		var command = obj.getAttribute("top:layout");
-		//console.log(obj);
-		//   console.log(command);
 		command && eval(command);
-
 		// set Floating
-		setFloating(obj, doFloat);
+		setFloating(obj, doFloat);	
 		if(doFloat && isObj) {
 			var box = obj.getBBox();
 			var m = obj.getTransformToElement(obj.parentNode);

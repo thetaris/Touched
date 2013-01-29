@@ -3,7 +3,6 @@
 // NOT: sending responses to web client (browser)
 var colle;
 function insert(collection, content, filename, securitycode) {
-	//console.log("insert");
 	collection.insert({
 		name : filename,
 		value : content,
@@ -46,23 +45,21 @@ function checkCode(collection, filename, code, callback) {
 		cursor.nextObject(function(err, obj) {
 			if(obj == null)
 				callback(true);
-			else{
-				//console.log(obj.code);
-				callback(obj.code==code);
+			else {
+				callback(obj.code == code);
 			}
 		});
 	});
 }
 
-function getCollection(callback) {
+function getCollection(settings,callback) {
 	if(!colle) {
 		console.log("create collection");
 		var mongodb = require('mongodb');
-		var server = new mongodb.Server("dbh46.mongolab.com", 27467, {});
-		var db = new mongodb.Db('thetaeditor', server, {});
-		//var colle;
+		var server = new mongodb.Server(settings.mongodbserver, 27467, {});
+		var db = new mongodb.Db('thetaeditor', server, {w:1});
 		db.open(function(error, client) {
-			client.authenticate('chao', 'thetaris88', function(err, val) {
+			client.authenticate(settings.mongodbusername, settings.mongodbpassword, function(err, val) {
 				if(error) {
 					console.log(error);
 				}
@@ -70,12 +67,43 @@ function getCollection(callback) {
 				callback(colle);
 			});
 		});
-	}
-	else 
-	    callback(colle);
+	} else
+		callback(colle);
 }
 
-exports.getCollection = getCollection;
-exports.checkCode = checkCode;
-exports.insert = insert;
-exports.update = update;
+function readContent(settings,name, callback) {
+	getCollection(settings, function(collection) {
+		collection.find({
+			name : name
+		}, function(err, cursor) {
+			cursor.nextObject(function(err, obj) {
+				callback(obj == null, obj && obj.value);
+			});
+		});
+	});
+}
+
+function insertCollection(settings, filename, code) {
+	getCollection(settings, function(collection) {
+		insert(collection, "", filename, code);
+	});
+}
+
+function updateCollection(settings, content, filename, reqcode) {
+	getCollection(settings,function(collection) {
+		update(collection, content, filename, reqcode);
+	});
+}
+
+function checkCollection(settings, filename, reqCode, callback) {
+	getCollection(settings, function(collection) {
+		checkCode(collection, filename, reqCode, function(valid) {
+			callback(valid);
+		});
+	});
+}
+
+exports.checkCollection = checkCollection;
+exports.insertCollection = insertCollection;
+exports.updateCollection = updateCollection;
+exports.readContent = readContent;

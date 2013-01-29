@@ -5,13 +5,12 @@ var touchedDB = require('./db.js');
 // at any time we can call: touchedDB.createSoemthing
 
 // Check port number
-var port = process.env.PORT || parseInt(process.argv[2]);
-if(!port) {
-	console.log('ERROR: no port number provided.');
-	console.log('Please run as: node static.js <port>');
-	return;
+var settingsFile = process.argv[2];
+if(!settingsFile) {
+	console.log('Not settings file defined. Using  settings.default.js.');
+	settingsFile= 'settings.default.js';
 }
-
+var settings= require('./'+settingsFile);
 // mime types
 var mimes = {
 	html : 'text/html',
@@ -42,6 +41,10 @@ process.stdin.on('data', function(text) {
 // Run web server
 http.createServer(function(req, res) {
 	// check code if provided
+	if(!req.url.match('^/')){
+		res.end();
+		return;
+	}	    
 	var filename = req.url.match('^/+([^?]*)')[1];
 	var validCode = false;
 	var reqCode = '';
@@ -51,13 +54,10 @@ http.createServer(function(req, res) {
 		// check code from MongoDB (is true if docuemnt does not exist)
 		//first to get the content needs to be stored
 		getPostContent(req, function(data) {
-			touchedDB.getCollection(function(collection) {
-				touchedDB.checkCode(collection, filename, reqCode, function(valid) {
-					validCode = valid;
-					console.log(validCode);
-					handleRequest(data, req, res, validCode, filename, reqCode);
-				});
-			});
+			touchedDB.checkCollection(settings,filename, reqCode, function(valid) {
+				validCode = valid;
+				handleRequest(data, req, res, validCode, filename, reqCode);
+			})
 		});
 	} else {
 		validCode = (reqCode == adminCode) && files[filename];
@@ -65,13 +65,13 @@ http.createServer(function(req, res) {
 			handleRequest(content, req, res, validCode, filename, reqCode);
 		});
 	}
-}).listen(port);
+}).listen(settings.port);
 
 function handleRequest(content, req, res, validCode, filename, reqCode) {
 	// serve appropriate file
 	if(req.url.match('^/(index.html)?$')) {
 		res.writeHead(303, {
-			'location' : '/static/index.xml?run'
+			'location' : '/static/start.html'
 		});
 		res.end();
 	} else if(req.url.match('^/test/?$')) {
@@ -79,9 +79,14 @@ function handleRequest(content, req, res, validCode, filename, reqCode) {
 			'location' : '/test/index.html'
 		});
 		res.end();
-	} else if(req.url.match(/[?&](save|edit|view|run|play)(&|$)/)) {
+	}
+	else if(req.url.match(/[?&](save|edit|view|run|play)(&|$)/)||strEndsWith(req.url, "puzzle")) {
 		// check security code for edit and save actions
-		var mode = req.url.match(/[?&]([^&]*)(&|$)/)[1];
+		var mode;
+		if(strEndsWith(req.url, "puzzle"))
+			mode = 'run';
+		else
+			mode = req.url.match(/[?&]([^&]*)(&|$)/)[1];
 		if(mode == 'save') {
 			if(validCode)
 				saveFile(content, res, filename, reqCode);
@@ -96,25 +101,41 @@ function handleRequest(content, req, res, validCode, filename, reqCode) {
 		} else if(mode == 'edit' && validCode) {
 			showTouched(res, filename, 'static/touched.html', reqCode);
 		} else {
-			if(waiting)
-				waiting(false);
-			console.log('Grant access to file : ' + filename + ' [y/n]?');
-			waiting = function(granted) {
-				if(granted) {
-					files[filename] = true;
-					res.writeHead(303, {
-						'location' : '/' + filename + '?edit&code=' + adminCode
-					});
-					res.end();
-				} else {
-					denyAccess(res, 'Access denied: ' + filename);
+			if(isMongoDB(filename)) {
+				denyAccess(res, 'Access denied: ' + filename);
+			} else {
+				if(waiting)
+					waiting(false);
+				console.log('Grant access to file : ' + filename + ' [y/n]?');
+				waiting = function(granted) {
+					if(granted) {
+						files[filename] = true;
+						res.writeHead(303, {
+							'location' : '/' + filename + '?edit&code=' + adminCode
+						});
+						res.end();
+					} else {
+						denyAccess(res, 'Access denied: ' + filename);
+					}
+					waiting = null;
 				}
-				waiting = null;
 			}
 		}
-	} else if(req.url.match("/redirect/")) {
+	}
+	 else if(req.url.match("/redirect/")) {
 		var url = req.url.match("/redirect/(.*)")[1];
 		redirect(res, url);
+	} else if(req.url.match("/check")) {
+		res.writeHead(200, {
+			'Content-Type' : 'text/plain'
+		});
+		touchedDB.checkCollection(settings,req.url.substr(1, req.url.length-7), reqCode, function(valid) {
+			if(!valid)
+				res.write("filename is in use");
+			else
+				res.write("filename is not in use");
+			res.end();
+		})
 	} else {
 		serveFile(res, filename, validCode);
 	}
@@ -152,16 +173,13 @@ function showTouched(res, filename, template, code) {
 }
 
 function show(res, filename, template, code, g) {
-	//console.log("get here");
 	readTouchedContent(filename, function(err, content) {
 		//if err, it means there is no such a file stored on Mongolab, needs to be created
 		if(err) {
-			//if there is a code, insert this file in the Mongolab, if not, read the create.html and ask the user to create 
+			//if there is a code, insert this file in the Mongolab, if not, read the create.html and ask the user to create
 			if(code) {
 				// create file or insert with code
-				touchedDB.getCollection(function(collection) {
-					touchedDB.insert(collection, "", filename, code);
-				});
+				touchedDB.insertCollection(settings, filename, code);
 			} else {
 				fs.readFile("static/create.html", function(err, data) {
 					data = data.toString().replace(/<touched:code>/, generateCode(20))
@@ -174,7 +192,6 @@ function show(res, filename, template, code, g) {
 			}
 		}
 		fs.readFile(template, function(err, data) {
-			//console.log(data);
 			res.writeHead(200, {
 				'Content-Type' : 'text/html'
 			});
@@ -190,20 +207,14 @@ function show(res, filename, template, code, g) {
 }
 
 function isMongoDB(name) {
-	return name.match('Mongodb');
+	return settings.usemongodb && name.match('m/');
 }
 
 function readTouchedContent(name, callback) {
 	if(isMongoDB(name)) {
 		// all mongo dependencies are here, nowhere else
-		touchedDB.getCollection(function(collection) {
-			collection.find({
-				name : name
-			}, function(err, cursor) {
-				cursor.nextObject(function(err, obj) {
-					callback(obj == null, obj && obj.value);
-				});
-			});
+		touchedDB.readContent(settings,name, function(err, content) {
+			callback(err, content);
 		});
 	} else {
 		fs.readFile(name, callback);
@@ -249,7 +260,6 @@ function denyAccess(res, message) {
 }
 
 function getPostContent(req, callback) {
-	console.log(req.method);
 	var body = '<touched>';
 	if(req.method == 'POST') {
 		req.on('data', function(data) {
@@ -273,9 +283,11 @@ function saveFile(content, res, filename, reqcode) {
 			res.end();
 		});
 	} else {
-		touchedDB.getCollection(function(collection) {
-			touchedDB.update(collection, content, filename, reqcode);
-			res.end();
-		});
+		touchedDB.updateCollection(settings,content, filename, reqcode);
+		res.end();
 	}
+}
+
+function strEndsWith(str, suffix) {
+    return str.match(suffix+"$")==suffix;
 }
