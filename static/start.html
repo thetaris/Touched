@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+	<head>
+		<meta charset="UTF-8"/>
+		<!-- editor scripts -->
+		<script type="text/javascript" src="/lib/jquery.min.js"></script>
+	</head>
+	<body >
+		<p align="center" >
+			<font size="6">Welcome to Thetaris Online Puzzle Game</font>
+		</p>
+		<font size="4" face="arial" style="color: #0000FF"> Create a Puzzle file: </font>
+		<p>
+			http://<span id="host"></span>/m/
+			<input type = 'text' onkeyup='check()' id = 'file'/>
+			.puzzle
+			<input type = 'button' value ='create' onclick = 'clickCreate()' id='button'/>
+			<div>
+				<font size ="3" style="color: #0000FF">If you have any questions, please click the "question mark" for help:</font>
+			</div>
+			<div id="invalidname" style="display:none">
+				<br>
+				This filename is already in use, please use another name!
+			</div>
+			<!--font style="position:absolute; top: 140px; left: 380px; color: #0000FF" size="3" face="arial"> Help: </font-->
+			<img src ="question.png" style="position:absolute; top: 130px; left: 450px;" width="50" height="50" alt="bottle" onclick="imageClick()">
+		</p>
+	</body>
+	<script>
+		$(document).ready(function getHost() {
+			$('#host').text(location.host);
+			if($('#file').val() == "")
+				$('#button').attr("disabled", "disabled");
+		});
+		function clickCreate() {
+			window.location = '/m/' + $('#file').val() + '.puzzle?edit';
+		}
+
+		function imageClick() {
+			var newtab = window.open();
+			newtab.location = " http://chaoqimuc.wordpress.com/2013/01/21/instruction-for-online-puzzle-game/";
+		}
+
+		function check() {
+			$.ajax('/m/' + $('#file').val().replace(/^ *| *$/g, '').replace(/ +/g, ' ') + '.puzzle/check').done(function(content) {
+				if(content == 'filename is in use') {
+					$('#invalidname').show();
+					$('#button').attr("disabled", "disabled");
+				} else if($('#file').val() == "") {
+					$('#invalidname').hide();
+					$('#button').attr("disabled", "disabled");
+				} else {
+					$('#invalidname').hide();
+					$('#button').removeAttr("disabled");
+				}
+			});
+		}
+	</script>
+</html>
