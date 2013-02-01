@@ -1,88 +1,91 @@
 <!DOCTYPE HTML>
-  <head>
-    <meta charset="UTF-8"/>
-    <link type="text/css" href="/style.css" rel="stylesheet"/>
+<head>
+	<meta charset="UTF-8"/>
+	<link type="text/css" href="/style.css" rel="stylesheet"/>
+	<!-- editor scripts -->
+	<script type="text/javascript" src="/lib/jquery.min.js"></script>
+	<script type="text/javascript" src="/touched.js"></script>
+	<script type="text/javascript" src="/touched-types.js"></script>
+	<script type="text/javascript" src="/touched-menu.js"></script>
+	<script type="text/javascript" src="/touched-tocode.js"></script>
+	<script type="text/javascript" src="/classList.js"></script>
+	<!-- execution scripts -->
+	<script type="text/javascript" src="/lib/d3.v2.js"></script>
+	<script type="text/javascript" src="/exec.js"></script>
+	<script type="text/javascript" src="/exec.d3.js"></script>
+	<script type="text/javascript" src="/exec.help.js"></script>
+	<script type="text/javascript" src="/exec.l.js"></script>
+	<script type="text/javascript" src="/exec.viz.js"></script>
+	<script type="text/javascript" src="/exec.puzzle.js"></script>
+	<script type="text/javascript" src="/exec.filter.js"></script>
+	<!-- UI scripts -->
+	<script type="text/javascript" src="/static/touched-pane.js"></script>
+	<script type="text/javascript">
+		var code = '<touched:code>';
+		var file = '<touched:file>';
+		var grammar = '<touched:g>';
 
-    <!-- editor scripts -->
-    <script type="text/javascript" src="/lib/jquery.min.js"></script>
-    <script type="text/javascript" src="/touched.js"></script>
-    <script type="text/javascript" src="/touched-types.js"></script>
-    <script type="text/javascript" src="/touched-menu.js"></script>
-    <script type="text/javascript" src="/touched-tocode.js"></script>
-    <script type="text/javascript" src="/classList.js"></script>
-    <!-- execution scripts -->
-    <script type="text/javascript" src="/lib/d3.v2.js"></script>
-    <script type="text/javascript" src="/exec.js"></script>
-    <script type="text/javascript" src="/exec.d3.js"></script>
-    <script type="text/javascript" src="/exec.help.js"></script>
-    <script type="text/javascript" src="/exec.l.js"></script>
-    <script type="text/javascript" src="/exec.viz.js"></script>
-    <script type="text/javascript" src="/exec.puzzle.js"></script>
-    <script type="text/javascript" src="/exec.filter.js"></script>
-    <!-- UI scripts -->
-    <script type="text/javascript" src="/static/touched-pane.js"></script>
-    <script type="text/javascript">
-      var code= '<touched:code>';
-      var file= '<touched:file>';
-      var grammar= '<touched:g>';
-    </script>
-    <style>
-      #execution {
-      position: absolute;
-      top: 60px;
-      background: white;
-      }
-      #execControl {
-      border: 1px solid black;
-      border-radius: 5px;
-      }
-      #dataview {
-      margin: 10px;
-      }
-      #dataview table,td {
-      border-collapse: collapse;
-      border: 1px black solid
-      }
-    </style>
-  </head>
-  <body>
-    <div id="menubar">
-      <ul id="menu"/>
-    </div>
-    <div>
-      <div id="canvas"></div>
-      <div id="execution">
-	<div id="execControl">
-	  <span onclick="$('#execsetting').toggle()">Run</span>
-	  <span style="display:none" id="debugControl">
-	    <input type="button" onclick="debugNext(true)" value="Step"/>
-	    <input type="button" onclick="debugContinue()" value="Continue"/>
-	  </span>
-	  <div id="execsetting" style="display:none">
-	    Options:
-	    <p>
-	      <input type='checkbox' id="autoupdate" checked="checked"/> Automatic update
-	    </p>
-	    <p>
-	      <input type='checkbox' id="codeleft" checked="checked"/> Place code left
-	    </p>
-	    <p>
-	      Actions: 
-	      <!--input type='button' id="debug" value="Debug"/-->
-	      <!--input type='button' id="rerun" value="Rerun"/-->
-	      <input type='button' id='open' value ="Open in new tab" onclick="openInnewtab()"/>
-	    </p>
-	  </div>
+	</script>
+	<style>
+		#execution {
+			position: absolute;
+			top: 60px;
+			background: white;
+		}
+		#execControl {
+			border: 1px solid black;
+			border-radius: 5px;
+		}
+		#dataview {
+			margin: 10px;
+		}
+		#dataview table, td {
+			border-collapse: collapse;
+			border: 1px black solid
+		}
+	</style>
+</head>
+<body>
+	<div id="menubar">
+		<ul id="menu"/>
 	</div>
-	<div id="dataview"/>
-      </div>
-    </div>
-    <div id="code" style="display:none"><!--touched:content--></div>
-  </body>
-  <script>
-  	function openInnewtab() {
-	    var newtab = window.open();
-	    newtab.location = window.location.pathname;
-     }
-  </script>
-</html>
+	<div>
+		<div id="canvas"></div>
+		<div id="execution">
+			<div id="execControl">
+				<span onclick="$('#execsetting').toggle()">Run</span>
+				<span style="display:none" id="debugControl">
+					<input type="button" onclick="debugNext(true)" value="Step"/>
+					<input type="button" onclick="debugContinue()" value="Continue"/>
+				</span>
+				<div id="execsetting" style="display:none">
+					Options:
+					<p>
+						<input type='checkbox' id="autoupdate" checked="checked"/>
+						Automatic update
+					</p>
+					<p>
+						<input type='checkbox' id="codeleft" checked="checked"/>
+						Place code left
+					</p>
+					<p>
+						Actions: <!--input type='button' id="debug" value="Debug"/-->
+						<!--input type='button' id="rerun" value="Rerun"/-->
+						<input type='button' id='open' value ="Open in new tab" onclick="openInnewtab()"/>
+					</p>
+				</div>
+			</div>
+			<div id="dataview"/>
+		</div>
+	</div>
+	<div id="code" style="display:none">
+		<!--touched:content-->
+	</div>
+</body>
+<script>
+	function openInnewtab() {
+		var newtab = window.open();
+		newtab.location = window.location.pathname;
+	}
+</script>
+</html> 

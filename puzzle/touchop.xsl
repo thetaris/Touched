@@ -42,9 +42,14 @@
     <!-- apply operator translation accoring to the xy attribute -->
     <xsl:element name="g">
       <xsl:if test="@xy">
-	<xsl:attribute name="transform">
-	  <xsl:copy-of select="concat('translate(',@xy,')')"/>
-	</xsl:attribute>
+	     <xsl:attribute name="transform">
+	        <xsl:copy-of select="concat('translate(',@xy,')')"/>
+	     </xsl:attribute>
+      </xsl:if>
+      <xsl:if test="@id">
+	     <xsl:attribute name="data-touched-id">
+	        <xsl:copy-of select="concat('',@id,'')"/>
+	     </xsl:attribute>
       </xsl:if>
       <!-- find the corresponding definition of that operator -->
       <xsl:apply-templates select="."/>

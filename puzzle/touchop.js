@@ -82,7 +82,7 @@ function msDown(evt) {
 			grabbed = grabbed.parentNode;
 		}
 		handOp = grabbed;
-
+        markLine(handOp.getAttribute("data-touched-id"));
 		// store mouse position. Will be updated when mouse moves.
 		startPos = [evt.clientX, evt.clientY];
 		hasMoved = false;
@@ -133,7 +133,6 @@ function msMove(evt) {
 
 		// long click action
 		initLongClick(evt.clientX, evt.clientY);
-
 		// check if object can be dropped
 		var dropTo = evt.target;
 		while(dropTo.nodeType == 1 && dropTo.getAttribute("class") != "operand")
@@ -150,6 +149,7 @@ function msMove(evt) {
 			// offset snap region
 			startPos = [evt.clientX, evt.clientY];
 			hasMoved = true;
+			
 		} else if(dropTo != handOp.parentNode) {
 			// object can not be dropped let it move
 			var isTop = handOp == findRoot(handOp);
@@ -211,10 +211,13 @@ function sendHome(obj) {
 	var target = obj;
 	//var nodes = document.childNodes;
 	while(!target.nodeName.match(/svg/i)) {
-		//console.log(target.nodeName);
 		target = target.parentNode;
-	}
-
+	}	
+	//TODO: moving to touched editor code
+    var svgmatrix = obj.getTransformToElement(target);
+    setCodeAttribute(obj.getAttribute("data-touched-id"), "x position", Math.floor(svgmatrix.e+obj.getBBox().x));
+    setCodeAttribute(obj.getAttribute("data-touched-id"), "y position", Math.floor(svgmatrix.f+obj.getBBox().y));
+  
 	if(obj.parentNode != target) {
 		// store the current location
 		var m1 = target.getScreenCTM().inverse();

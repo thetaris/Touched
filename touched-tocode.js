@@ -1,19 +1,8 @@
 // Convert a jQuery object into a code object that knows its arguments and its type
 function toCode(node, commands) {
-			// IE fix
-			//if(!node.classList){
-			//	node.classList= { contains: function(c) { return !!(node.getAttribute("class")||"").match(c); }}
-			//}
-			// end IE fix
-	// search child nodes
 	var findArgs = function(node, args) {
 		for(var i = 0; i < node.childNodes.length; ++i) {
 			var child = node.childNodes[i];
-			// IE fix
-			//if(!child.classList){
-			//	child.classList= { contains: function(c) { return !!(child.getAttribute("class")||"").match(c); }}
-			//}
-			// end IE fix
 			if(child.nodeType == 1 && (!child.classList.contains('float'))) {
 				if(child.classList.contains('arg')) {
 					var name = child.getAttribute('data-name');
@@ -88,8 +77,10 @@ function toCode(node, commands) {
 	    f(data);
 	},
 	error: function(message) {
-	    if (window.markError)
-		window.markError(this.id, message);
+	    if (window.markError){
+	    	//console.log(this);
+	    	window.markError(this.id, message);
+	    }
 	    else
 		console.warn(message);
 	},

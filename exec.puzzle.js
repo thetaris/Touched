@@ -1,3 +1,4 @@
+var cmdArray = [];
 commands.puzzle = {
 	game : function(code, output) {
 		output.selectAll('*').remove();
@@ -6,7 +7,9 @@ commands.puzzle = {
 		if(goal) {
 			output.append('div').text("<test domain=" + "\"" + "algebra" + "\"" + " win=" + "\"" + goal + "\"" + "/>");
 		}
-		code.args('command').forEach(function(cmd) {
+		code.args('command').forEach(function(cmd, index) {
+			//console.log(cmd);
+			cmdArray[index] = cmd;
 			var root = output.append('div');
 			cmd.call(root, function(data) {
 				data.toDOM(root);
@@ -16,9 +19,8 @@ commands.puzzle = {
 		output.append('script').attr('src', '../puzzle/touchop.js').attr('type', 'text/javascript');
 		output.append('script').attr('src', '../puzzle/def.js').attr('type', 'text/javascript');
 		output.append('script').attr('src', '../puzzle/algebra.js').attr('type', 'text/javascript');
-		output.append('script').attr('src', '../puzzle/style.css').attr('type', 'text/css');
-		output.append('img').attr('src', '../puzzle/frowny.svg').attr('type', 'img');
-		output.append('img').attr('src', '../puzzle/smiley.svg').attr('type', 'img');
+
+		//return;
 		var xmltext = output[0][0].innerText;
 		var parser = new DOMParser();
 		var xml = parser.parseFromString(xmltext, 'text/xml');
@@ -28,14 +30,19 @@ commands.puzzle = {
 			xsltProcessor = new XSLTProcessor();
 			xsltProcessor.importStylesheet(xsl);
 			var resultDocument = xsltProcessor.transformToFragment(xml, document);
+			resultDocument = Addtouchedid(resultDocument);
 			output[0][0].innerText = "";
+			if($('#menubar')[0])
+				output[0][0].innerHTML = '<input type="button" id="openindataview" value ="Open in new tab" onclick="openInnewtab()"/>';
 			output.node().appendChild(resultDocument);
-		}
-		if( typeof (xml.transformNode) != "undefined") {
+		} else if( typeof (xml.transformNode) != "undefined") {
 			return xml.transformNode(xsl);
 		} else {
 			try {
-				// 3
+				// IE9
+				output.append('script').attr('src', '../puzzle/style.css').attr('type', 'text/css');
+				output.append('img').attr('src', '../puzzle/frowny.svg').attr('type', 'img');
+				output.append('img').attr('src', '../puzzle/smiley.svg').attr('type', 'img');
 				if(window.ActiveXObject) {
 					var xslt = new ActiveXObject("Msxml2.XSLTemplate.3.0");
 					var xslDoc = new ActiveXObject("Msxml2.FreeThreadedDOMDocument.3.0");
@@ -49,7 +56,6 @@ commands.puzzle = {
 					xslProc.input = xmlDoc;
 					xslProc.transform();
 					var res = xslProc.output;
-
 					//console.log(res);
 					res = res.replace('<?xml version="1.0" encoding="UTF-16"?>', '<?xml version="1.0"  standalone="no"?>' + '<!DOCTYPE svg PUBLIC ' + '"-//W3C//DTD SVG 1.1//EN"' + " " + '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">');
 					res = res.replace('xmlns:svg="http://www.w3.org/2000/svg"', 'xmlns="http://www.w3.org/2000/svg"')
@@ -69,7 +75,6 @@ commands.puzzle = {
 				return null;
 			}
 		}
-
 		//document.getElementById("dataview").appendChild(resultDocument);
 		setTimeout(function() {
 			initialization()
@@ -84,7 +89,7 @@ commands.puzzle = {
 				var y = code.arg('y position').text;
 				if(!y)
 					y = 100;
-				data = VizData.text("<op name=" + "\"" + "plus" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+				data = VizData.text("<op name=" + "\"" + "plus" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + " id=" + "\"" + code.id + "\"" + "/>")
 				callback(data);
 			},
 			minus : function(code, output, callback) {
@@ -94,7 +99,7 @@ commands.puzzle = {
 				var y = code.arg('y position').text;
 				if(!y)
 					y = 100;
-				data = VizData.text("<op name=" + "\"" + "minus" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+				data = VizData.text("<op name=" + "\"" + "minus" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + " id=" + "\"" + code.id + "\"" + "/>")
 				callback(data);
 			},
 			multiply : function(code, output, callback) {
@@ -104,7 +109,7 @@ commands.puzzle = {
 				var y = code.arg('y position').text;
 				if(!y)
 					y = 100;
-				data = VizData.text("<op name=" + "\"" + "times" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+				data = VizData.text("<op name=" + "\"" + "times" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + " id=" + "\"" + code.id + "\"" + "/>")
 				callback(data);
 			},
 			divide : function(code, output, callback) {
@@ -114,7 +119,7 @@ commands.puzzle = {
 				var y = code.arg('y position').text;
 				if(!y)
 					y = 100;
-				data = VizData.text("<op name=" + "\"" + "divide" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+				data = VizData.text("<op name=" + "\"" + "divide" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + " id=" + "\"" + code.id + "\"" + "/>")
 				callback(data);
 			},
 			power : function(code, output, callback) {
@@ -124,7 +129,7 @@ commands.puzzle = {
 				var y = code.arg('y position').text;
 				if(!y)
 					y = 100;
-				data = VizData.text("<op name=" + "\"" + "power" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+				data = VizData.text("<op name=" + "\"" + "power" + "\"" + " xy=" + "\"" + x + "," + y + "\"" + " id=" + "\"" + code.id + "\"" + "/>")
 				callback(data);
 			},
 		},
@@ -137,7 +142,7 @@ commands.puzzle = {
 			if(!y)
 				y = 100;
 			if(value) {
-				data = VizData.text("<atom value=" + "\"" + value + "\"" + " xy=" + "\"" + x + "," + y + "\"" + "/>")
+				data = VizData.text("<atom value=" + "\"" + value + "\"" + " xy=" + "\"" + x + "," + y + "\"" + " id=" + "\"" + code.id + "\"" + "/>")
 				callback(data);
 			}
 		}
@@ -160,4 +165,15 @@ function cloneToDoc(node, doc) {
 		clone.insertBefore(c.nodeType == 1 ? cloneToDoc(c, doc) : doc.createTextNode(c.nodeValue), null);
 	}
 	return clone;
+}
+
+function Addtouchedid(svgDoc) {
+	var children = svgDoc.childNodes[0].childNodes;
+	for(var i = 0; i < children.length; i++) {
+		if(children[i].nodeName == "g" && children[i].hasAttribute("data-touched-id")) {
+			var id = children[i].getAttribute("data-touched-id");
+			children[i].childNodes[1].setAttribute("data-touched-id", id);
+		}
+	}
+	return svgDoc;
 }
