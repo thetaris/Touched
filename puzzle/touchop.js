@@ -76,17 +76,16 @@ function msDown(evt) {
 		// find signaling object
 		evt = translateTouch(evt);
 		touchOnly = evt.isTouch;
-
 		var grabbed = evt.target;
 		while(grabbed.getAttribute("onmousedown") != "msDown(evt)") {
 			grabbed = grabbed.parentNode;
 		}
 		handOp = grabbed;
+		//mark the command in the touch editor
         markLine(handOp.getAttribute("data-touched-id"));
 		// store mouse position. Will be updated when mouse moves.
 		startPos = [evt.clientX, evt.clientY];
 		hasMoved = false;
-
 		// mark root after time out
 		initLongClick(evt.clientX, evt.clientY);
 		if(document.activeElement && document.activeElement.blur)
@@ -107,7 +106,6 @@ function msUp(evt) {
 	if(handOp != null) {
 		var root = findRoot(handOp);
 		releasehandOp();
-
 		// verify winning test after mouse release
 		verify(root, true);
 	}
@@ -116,7 +114,6 @@ function msUp(evt) {
 function releasehandOp() {
 	// make object receive mouse events again, release grip
 	handOp.removeAttribute("pointer-events");
-
 	// delete reference to handOp object.
 	handOp = null;
 }

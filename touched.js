@@ -533,10 +533,7 @@ function markLine(id) {
 }
 
 function setCodeAttribute(id, attrname, attrvalue) {
-	//console.log(attrname);
-	//console.log(attrvalue);
 	var obj = $('#' + id);
-	//console.log(obj);
 	if(obj[0]) {
 		var arg = obj[0].getElementsByClassName('arg');
 		for(var i = 0; i < arg.length; i++) {

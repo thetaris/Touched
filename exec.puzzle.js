@@ -1,4 +1,3 @@
-var cmdArray = [];
 commands.puzzle = {
 	game : function(code, output) {
 		output.selectAll('*').remove();
@@ -8,8 +7,6 @@ commands.puzzle = {
 			output.append('div').text("<test domain=" + "\"" + "algebra" + "\"" + " win=" + "\"" + goal + "\"" + "/>");
 		}
 		code.args('command').forEach(function(cmd, index) {
-			//console.log(cmd);
-			cmdArray[index] = cmd;
 			var root = output.append('div');
 			cmd.call(root, function(data) {
 				data.toDOM(root);
@@ -32,6 +29,7 @@ commands.puzzle = {
 			var resultDocument = xsltProcessor.transformToFragment(xml, document);
 			resultDocument = Addtouchedid(resultDocument);
 			output[0][0].innerText = "";
+			//if there is no menubar, it means open the puzzle in a new tab, so dont need to add the button
 			if($('#menubar')[0])
 				output[0][0].innerHTML = '<input type="button" id="openindataview" value ="Open in new tab" onclick="openInnewtab()"/>';
 			output.node().appendChild(resultDocument);
@@ -56,15 +54,10 @@ commands.puzzle = {
 					xslProc.input = xmlDoc;
 					xslProc.transform();
 					var res = xslProc.output;
-					//console.log(res);
 					res = res.replace('<?xml version="1.0" encoding="UTF-16"?>', '<?xml version="1.0"  standalone="no"?>' + '<!DOCTYPE svg PUBLIC ' + '"-//W3C//DTD SVG 1.1//EN"' + " " + '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">');
 					res = res.replace('xmlns:svg="http://www.w3.org/2000/svg"', 'xmlns="http://www.w3.org/2000/svg"')
-					//console.log(res);
 					var svgDoc = parser.parseFromString(res, 'text/xml');
 					output[0][0].innerText = "";
-					//output.node().appendChild(svgDoc.documentElement);
-					//output.node().innerHTML = res;
-					//output[0][0].innerHTML = res;
 					//var svg = document.importNode(svgDoc.documentElement, true);
 					var svg = cloneToDoc(svgDoc.documentElement);
 					output.node().appendChild(svg);
@@ -75,7 +68,6 @@ commands.puzzle = {
 				return null;
 			}
 		}
-		//document.getElementById("dataview").appendChild(resultDocument);
 		setTimeout(function() {
 			initialization()
 		}, 300);
