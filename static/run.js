@@ -136,7 +136,16 @@ function handleRequest(content, req, res, validCode, filename, reqCode) {
 				res.write("filename is not in use");
 			res.end();
 		})
-	} else {
+	} else if(req.url.match("/getAllItems")){
+		res.writeHead(200, {
+			'Content-Type' : 'text/plain'
+		});
+		touchedDB.getAllItems(settings, function(result){
+			res.write(result);
+			res.end();
+		})	
+	}		
+		else {
 		serveFile(res, filename, validCode);
 	}
 }

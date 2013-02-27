@@ -52,12 +52,14 @@ function checkCode(collection, filename, code, callback) {
 	});
 }
 
-function getCollection(settings,callback) {
+function getCollection(settings, callback) {
 	if(!colle) {
 		console.log("create collection");
 		var mongodb = require('mongodb');
 		var server = new mongodb.Server(settings.mongodbserver, 27467, {});
-		var db = new mongodb.Db('thetaeditor', server, {w:1});
+		var db = new mongodb.Db('thetaeditor', server, {
+			w : 1
+		});
 		db.open(function(error, client) {
 			client.authenticate(settings.mongodbusername, settings.mongodbpassword, function(err, val) {
 				if(error) {
@@ -71,7 +73,7 @@ function getCollection(settings,callback) {
 		callback(colle);
 }
 
-function readContent(settings,name, callback) {
+function readContent(settings, name, callback) {
 	getCollection(settings, function(collection) {
 		collection.find({
 			name : name
@@ -90,7 +92,7 @@ function insertCollection(settings, filename, code) {
 }
 
 function updateCollection(settings, content, filename, reqcode) {
-	getCollection(settings,function(collection) {
+	getCollection(settings, function(collection) {
 		update(collection, content, filename, reqcode);
 	});
 }
@@ -103,7 +105,23 @@ function checkCollection(settings, filename, reqCode, callback) {
 	});
 }
 
+function getAllItems(settings, callback) {
+	getCollection(settings, function(collection) {
+		collection.find().toArray(function(err, docs) {
+			if(err) {
+				console.warn(err.message);
+			}
+			var str="";
+			for(var i in docs) {
+				str = str + "<li><a href=/m/"+docs[i].name.substring(2)+"><font color='green'>"+docs[i].name.substring(2)+"</font></li>";
+			}
+			callback(str);
+		});
+	})
+}
+
 exports.checkCollection = checkCollection;
 exports.insertCollection = insertCollection;
 exports.updateCollection = updateCollection;
 exports.readContent = readContent;
+exports.getAllItems = getAllItems;
