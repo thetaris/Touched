@@ -8,9 +8,9 @@ var touchedDB = require('./db.js');
 var settingsFile = process.argv[2];
 if(!settingsFile) {
 	console.log('Not settings file defined. Using  settings.default.js.');
-	settingsFile= 'settings.default.js';
+	settingsFile = 'settings.default.js';
 }
-var settings= require('./'+settingsFile);
+var settings = require('./' + settingsFile);
 // mime types
 var mimes = {
 	html : 'text/html',
@@ -41,10 +41,10 @@ process.stdin.on('data', function(text) {
 // Run web server
 http.createServer(function(req, res) {
 	// check code if provided
-	if(!req.url.match('^/')){
+	if(!req.url.match('^/')) {
 		res.end();
 		return;
-	}	    
+	}
 	var filename = req.url.match('^/+([^?]*)')[1];
 	var validCode = false;
 	var reqCode = '';
@@ -54,7 +54,7 @@ http.createServer(function(req, res) {
 		// check code from MongoDB (is true if docuemnt does not exist)
 		//first to get the content needs to be stored
 		getPostContent(req, function(data) {
-			touchedDB.checkCollection(settings,filename, reqCode, function(valid) {
+			touchedDB.checkCollection(settings, filename, reqCode, function(valid) {
 				validCode = valid;
 				handleRequest(data, req, res, validCode, filename, reqCode);
 			})
@@ -79,8 +79,7 @@ function handleRequest(content, req, res, validCode, filename, reqCode) {
 			'location' : '/test/index.html'
 		});
 		res.end();
-	}
-	else if(req.url.match(/[?&](save|edit|view|run|play)(&|$)/)||strEndsWith(req.url, "puzzle")) {
+	} else if(req.url.match(/[?&](save|edit|view|run|play)(&|$)/) || strEndsWith(req.url, "puzzle")) {
 		// check security code for edit and save actions
 		var mode;
 		if(strEndsWith(req.url, "puzzle"))
@@ -121,31 +120,29 @@ function handleRequest(content, req, res, validCode, filename, reqCode) {
 				}
 			}
 		}
-	}
-	 else if(req.url.match("/redirect/")) {
+	} else if(req.url.match("/redirect/")) {
 		var url = req.url.match("/redirect/(.*)")[1];
 		redirect(res, url);
 	} else if(req.url.match("/check")) {
 		res.writeHead(200, {
 			'Content-Type' : 'text/plain'
 		});
-		touchedDB.checkCollection(settings,req.url.substr(1, req.url.length-7), reqCode, function(valid) {
+		touchedDB.checkCollection(settings, req.url.substr(1, req.url.length - 7), reqCode, function(valid) {
 			if(!valid)
 				res.write("filename is in use");
 			else
 				res.write("filename is not in use");
 			res.end();
 		})
-	} else if(req.url.match("/getAllItems")){
+	} else if(req.url.match("/getAllItems")) {
 		res.writeHead(200, {
 			'Content-Type' : 'text/plain'
 		});
-		touchedDB.getAllItems(settings, function(result){
+		touchedDB.getAllItems(settings, function(result) {
 			res.write(result);
 			res.end();
-		})	
-	}		
-		else {
+		})
+	} else {
 		serveFile(res, filename, validCode);
 	}
 }
@@ -222,7 +219,7 @@ function isMongoDB(name) {
 function readTouchedContent(name, callback) {
 	if(isMongoDB(name)) {
 		// all mongo dependencies are here, nowhere else
-		touchedDB.readContent(settings,name, function(err, content) {
+		touchedDB.readContent(settings, name, function(err, content) {
 			callback(err, content);
 		});
 	} else {
@@ -292,11 +289,11 @@ function saveFile(content, res, filename, reqcode) {
 			res.end();
 		});
 	} else {
-		touchedDB.updateCollection(settings,content, filename, reqcode);
+		touchedDB.updateCollection(settings, content, filename, reqcode);
 		res.end();
 	}
 }
 
 function strEndsWith(str, suffix) {
-    return str.match(suffix+"$")==suffix;
+	return str.match(suffix + "$") == suffix;
 }
